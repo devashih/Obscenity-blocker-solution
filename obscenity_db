@@ -1,0 +1,13 @@
+const { Pool } = require('pg');
+const pool = new Pool({
+    user: 'user',
+    host: 'localhost',
+    database: 'obscenity_db',
+    password: 'password',
+    port: 5432
+});
+
+async function logDetectedContent(userId, mediaType, labels) {
+    const query = `INSERT INTO detections (user_id, media_type, labels, timestamp) VALUES ($1, $2, $3, NOW())`;
+    await pool.query(query, [userId, mediaType, labels]);
+}
