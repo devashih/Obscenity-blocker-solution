@@ -1,8 +1,7 @@
-# axios // core
+# axios // helpers
 
-The modules found in `core/` should be modules that are specific to the domain logic of axios. These modules would most likely not make sense to be consumed outside of the axios module, as their logic is too specific. Some examples of core modules are:
+The modules found in `helpers/` should be generic modules that are _not_ specific to the domain logic of axios. These modules could theoretically be published to npm on their own and consumed by other modules or apps. Some examples of generic modules are things like:
 
-- Dispatching requests
-  - Requests sent via `adapters/` (see lib/adapters/README.md)
-- Managing interceptors
-- Handling config
+- Browser polyfills
+- Managing cookies
+- Parsing HTTP headers
