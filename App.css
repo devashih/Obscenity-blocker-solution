@@ -1,0 +1,38 @@
+/* src/App.css */
+.container {
+  padding: 20px;
+  font-family: Arial, sans-serif;
+}
+
+.title {
+  color: #333;
+}
+
+.file-input {
+  margin: 10px 0;
+}
+
+.upload-button {
+  background-color: #4CAF50;
+  color: white;
+  padding: 10px 15px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.upload-button:hover {
+  background-color: #45a049;
+}
+
+.result {
+  margin-top: 20px;
+}
+
+.obscene {
+  color: red;
+}
+
+.no-obscene {
+  color: green;
+}
