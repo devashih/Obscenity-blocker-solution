@@ -1,69 +1,129 @@
 'use strict';
 
-/** @typedef {`$${import('.').InternalSlot}`} SaltedInternalSlot */
-/** @typedef {{ [k in SaltedInternalSlot]?: unknown }} SlotsObject */
+var test = require('tape');
+var inspect = require('object-inspect');
+var forEach = require('for-each');
 
-var hasOwn = require('hasown');
-/** @type {import('side-channel').Channel<object, SlotsObject>} */
-var channel = require('side-channel')();
+var SLOT = require('../');
 
-var $TypeError = require('es-errors/type');
+test('assert', function (t) {
+	forEach([null, undefined, true, false, 'foo', '', 42, 0], function (primitive) {
+		t['throws'](
+			// @ts-expect-error
+			function () { SLOT.assert(primitive, ''); },
+			TypeError,
+			inspect(primitive) + ' is not an Object'
+		);
+	});
 
-/** @type {import('.')} */
-var SLOT = {
-	assert: function (O, slot) {
-		if (!O || (typeof O !== 'object' && typeof O !== 'function')) {
-			throw new $TypeError('`O` is not an object');
-		}
-		if (typeof slot !== 'string') {
-			throw new $TypeError('`slot` must be a string');
-		}
-		channel.assert(O);
-		if (!SLOT.has(O, slot)) {
-			throw new $TypeError('`' + slot + '` is not present on `O`');
-		}
-	},
-	get: function (O, slot) {
-		if (!O || (typeof O !== 'object' && typeof O !== 'function')) {
-			throw new $TypeError('`O` is not an object');
-		}
-		if (typeof slot !== 'string') {
-			throw new $TypeError('`slot` must be a string');
-		}
-		var slots = channel.get(O);
-		// eslint-disable-next-line no-extra-parens
-		return slots && slots[/** @type {SaltedInternalSlot} */ ('$' + slot)];
-	},
-	has: function (O, slot) {
-		if (!O || (typeof O !== 'object' && typeof O !== 'function')) {
-			throw new $TypeError('`O` is not an object');
-		}
-		if (typeof slot !== 'string') {
-			throw new $TypeError('`slot` must be a string');
-		}
-		var slots = channel.get(O);
-		// eslint-disable-next-line no-extra-parens
-		return !!slots && hasOwn(slots, /** @type {SaltedInternalSlot} */ ('$' + slot));
-	},
-	set: function (O, slot, V) {
-		if (!O || (typeof O !== 'object' && typeof O !== 'function')) {
-			throw new $TypeError('`O` is not an object');
-		}
-		if (typeof slot !== 'string') {
-			throw new $TypeError('`slot` must be a string');
-		}
-		var slots = channel.get(O);
-		if (!slots) {
-			slots = {};
-			channel.set(O, slots);
-		}
-		// eslint-disable-next-line no-extra-parens
-		slots[/** @type {SaltedInternalSlot} */ ('$' + slot)] = V;
-	}
-};
+	forEach([null, undefined, true, false, 42, 0, {}, [], function () {}, /a/g], function (nonString) {
+		t['throws'](
+			// @ts-expect-error
+			function () { SLOT.assert({}, nonString); },
+			TypeError,
+			inspect(nonString) + ' is not a String'
+		);
+	});
 
-if (Object.freeze) {
-	Object.freeze(SLOT);
-}
+	t['throws'](
+		function () { SLOT.assert({}, '[[whatever]]'); },
+		TypeError,
+		'nonexistent slot throws'
+	);
 
-module.exports = SLOT;
+	var o = {};
+	SLOT.set(o, 'x');
+	t.doesNotThrow(function () { SLOT.assert(o, 'x'); }, 'existent slot noops');
+	t['throws'](function () { SLOT.assert(o, 'y'); }, 'thing with a slot throws on a nonexistent slot');
+
+	t.end();
+});
+
+test('has', function (t) {
+	forEach([null, undefined, true, false, 'foo', '', 42, 0], function (primitive) {
+		t['throws'](
+			// @ts-expect-error
+			function () { SLOT.has(primitive, ''); },
+			TypeError,
+			inspect(primitive) + ' is not an Object'
+		);
+	});
+
+	forEach([null, undefined, true, false, 42, 0, {}, [], function () {}, /a/g], function (nonString) {
+		t['throws'](
+			// @ts-expect-error
+			function () { SLOT.has({}, nonString); },
+			TypeError,
+			inspect(nonString) + ' is not a String'
+		);
+	});
+
+	var o = {};
+
+	t.equal(SLOT.has(o, '[[nonexistent]]'), false, 'nonexistent slot yields false');
+
+	SLOT.set(o, 'foo');
+	t.equal(SLOT.has(o, 'foo'), true, 'existent slot yields true');
+
+	t.end();
+});
+
+test('get', function (t) {
+	forEach([null, undefined, true, false, 'foo', '', 42, 0], function (primitive) {
+		t['throws'](
+			// @ts-expect-error
+			function () { SLOT.get(primitive, ''); },
+			TypeError,
+			inspect(primitive) + ' is not an Object'
+		);
+	});
+
+	forEach([null, undefined, true, false, 42, 0, {}, [], function () {}, /a/g], function (nonString) {
+		t['throws'](
+			// @ts-expect-error
+			function () { SLOT.get({}, nonString); },
+			TypeError,
+			inspect(nonString) + ' is not a String'
+		);
+	});
+
+	var o = {};
+	t.equal(SLOT.get(o, 'nonexistent'), undefined, 'nonexistent slot is undefined');
+
+	var v = {};
+	SLOT.set(o, 'f', v);
+	t.equal(SLOT.get(o, 'f'), v, '"get" retrieves value set by "set"');
+
+	t.end();
+});
+
+test('set', function (t) {
+	forEach([null, undefined, true, false, 'foo', '', 42, 0], function (primitive) {
+		t['throws'](
+			// @ts-expect-error
+			function () { SLOT.set(primitive, ''); },
+			TypeError,
+			inspect(primitive) + ' is not an Object'
+		);
+	});
+
+	forEach([null, undefined, true, false, 42, 0, {}, [], function () {}, /a/g], function (nonString) {
+		t['throws'](
+			// @ts-expect-error
+			function () { SLOT.set({}, nonString); },
+			TypeError,
+			inspect(nonString) + ' is not a String'
+		);
+	});
+
+	var o = function () {};
+	t.equal(SLOT.get(o, 'f'), undefined, 'slot not set');
+
+	SLOT.set(o, 'f', 42);
+	t.equal(SLOT.get(o, 'f'), 42, 'slot was set');
+
+	SLOT.set(o, 'f', Infinity);
+	t.equal(SLOT.get(o, 'f'), Infinity, 'slot was set again');
+
+	t.end();
+});
