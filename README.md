@@ -1,8 +1,8 @@
-Steps to use console:
-- Run `npm install` in root
-- `cd scripts`
-- `./console`
+# axios // core
 
-References:
-- [Setting Credentials in Node.js](https://docs.aws.amazon.com/sdk-for-javascript/v2/developer-guide/setting-credentials-node.html)
-- [SDK for JavaScript Code Examples](https://docs.aws.amazon.com/sdk-for-javascript/v2/developer-guide/sdk-code-samples.html)
+The modules found in `core/` should be modules that are specific to the domain logic of axios. These modules would most likely not make sense to be consumed outside of the axios module, as their logic is too specific. Some examples of core modules are:
+
+- Dispatching requests
+  - Requests sent via `adapters/` (see lib/adapters/README.md)
+- Managing interceptors
+- Handling config
